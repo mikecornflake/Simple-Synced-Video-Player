@@ -127,4 +127,11 @@ inherited frmSyncedVideoPlayer: TfrmSyncedVideoPlayer
     Left = 121
     Top = 84
   end
+  object tmrUpdate: TTimer[8]
+    Enabled = False
+    Interval = 300
+    OnTimer = tmrUpdateTimer
+    Left = 371
+    Top = 92
+  end
 end

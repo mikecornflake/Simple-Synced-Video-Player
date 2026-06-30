@@ -26,6 +26,7 @@ Type
     dlgOpen: TOpenDialog;
     pnlVideoPlayer: TPanel;
     Splitter1: TSplitter;
+    tmrUpdate: TTimer;
     Procedure FormActivate(Sender: TObject);
     Procedure FormClose(Sender: TObject; Var CloseAction: TCloseAction);
     Procedure FormCreate(Sender: TObject);
@@ -37,13 +38,15 @@ Type
     Procedure mnuOpenClick(Sender: TObject);
     Procedure mnuOpenRecentClick(Sender: TObject);
     Procedure mnuToggleVideoClick(Sender: TObject);
+    Procedure tmrUpdateTimer(Sender: TObject);
   Private
     fmeVideoPlayer: TFrameVideoPlayer;
     fmeSyncedVideo: TFrameSyncedVideo;
     FMRU: TMRU;
     FLoaded: Boolean;
     FInternalLoad: Boolean;
-    FSelecting: Boolean;
+    FIgnoreListViewSelectItem: Integer;
+    FFolder: String;
 
     Procedure OpenVideo(Const AFiles: TStrings); Overload;
     Procedure OpenVideo(Const AFiles: TStringArray); Overload;
@@ -104,7 +107,8 @@ Begin
 
   FLoaded := False;
   FInternalLoad := False;
-  FSelecting := False;
+  FIgnoreListViewSelectItem := 0;
+  FFolder := '';
 
   Caption := Application.Title;
 
@@ -256,7 +260,7 @@ Var
   End;
 
 Begin
-  oSelect := Nil;
+  oSelect := nil;
   sFolder := ExtractFileDir(AFile);
   sSearchMask := IncludeTrailingPathDelimiter(sFolder) + '*.*';
 
@@ -293,9 +297,9 @@ Begin
       Begin
         Inc(i);
 
-        While (i <= High(Files)) And
-              Files[i].HasDateTime And
-              (SecondsApart(Files[i].DateTime, Files[iGroupStart].DateTime) <= RELATED_VIDEO_WINDOW_SEC) Do
+        While (i <= High(Files)) And Files[i].HasDateTime And
+          (SecondsApart(Files[i].DateTime, Files[iGroupStart].DateTime) <=
+            RELATED_VIDEO_WINDOW_SEC) Do
         Begin
           Inc(iCount);
 
@@ -333,13 +337,13 @@ Begin
 
     If Assigned(oSelect) Then
     Begin
-      FSelecting := True;
+      Inc(FIgnoreListViewSelectItem);
       Try
         oSelect.Selected := True;
         oSelect.Focused := True;
         oSelect.MakeVisible(False);
       Finally
-        FSelecting := False;
+        Dec(FIgnoreListViewSelectItem);
       End;
     End;
   End;
@@ -374,16 +378,19 @@ Var
   arrFiles: TStringArray;
   sFile: String;
 Begin
-  If FSelecting Then
+  If (FIgnoreListViewSelectItem > 0) Or FInternalLoad Then
     Exit;
 
-  arrFiles := [];
-  sFile := IncludeSlash(ExtractFileDir(fmeSyncedVideo.Filename)) + Item.Subitems[2];
-  AddStringToArray(arrFiles, sFile);
+  If (Item.Selected) And (lvFiles.Selected = Item) Then
+  Begin
+    arrFiles := [];
+    sFile := IncludeSlash(FFolder) + Item.Subitems[2];
+    AddStringToArray(arrFiles, sFile);
 
-  FInternalLoad := True;
-  OpenVideo(arrFiles);
-  FInternalLoad := False;
+    FInternalLoad := True;
+    OpenVideo(arrFiles);
+    FInternalLoad := False;
+  End;
 End;
 
 Procedure TfrmSyncedVideoPlayer.OpenVideo(Const AFiles: TStrings);
@@ -419,24 +426,16 @@ Begin
     If TryParseInspectionFilename(sFile, oInspectionFilenameInfo) And
       oInspectionFilenameInfo.FoundDateTime Then
     Begin
-      If FInternalLoad Or (MessageDlg('Open related files?',
-        'This filename appears to contain a start time:' + LineEnding +
-        LineEnding + DateTimeToStr(oInspectionFilenameInfo.DateTime) +
-        LineEnding + LineEnding +
-        'Do you want to search the same folder for files in the same time window?',
-        mtConfirmation, [mbYes, mbNo], 0) = mrYes) Then
+      // Adjust this window to taste.  Currently +/- 5 seconds
+      dtStart := IncSecond(oInspectionFilenameInfo.DateTime, -5);
+      dtEnd := IncSecond(dtStart, 10);
+
+      arrFiles := FindFilesStartingInWindow(sFile, dtStart, dtEnd);
+
+      If Length(arrFiles) = 0 Then
       Begin
-        // Adjust this window to taste.  Currently +/- 5 seconds
-        dtStart := IncSecond(oInspectionFilenameInfo.DateTime, -5);
-        dtEnd := IncSecond(dtStart, 10);
-
-        arrFiles := FindFilesStartingInWindow(sFile, dtStart, dtEnd);
-
-        If Length(arrFiles) = 0 Then
-        Begin
-          SetLength(arrFiles, 1);
-          arrFiles[0] := sFile;
-        End;
+        SetLength(arrFiles, 1);
+        arrFiles[0] := sFile;
       End;
     End;
   End;
@@ -492,17 +491,21 @@ Begin
       fmeSyncedVideo.Play;
       fmeVideoPlayer.RefreshUI;
 
+      FFolder := ExtractFileDir(sFile);
+
       Caption := Format('%s: %s', [Application.Title, fmeSyncedVideo.Filename]);
 
-      sbMain.Panels[1].Text := 'Start: ' + FormatDateTime('yyyy-mm-dd HH:nn',
-        fmeSyncedVideo.StartDateTime);
-      sbMain.Panels[2].Text := 'Duration: ' + FormatDateTime('HH:nn:ss',
-        fmeSyncedVideo.DurationAsTime);
-      sbMain.Panels[3].Text := 'End: ' + FormatDateTime('yyyy-mm-dd HH:nn',
-        fmeSyncedVideo.EndDateTime);
+      tmrUpdate.Enabled := True;
 
       If Not FInternalLoad Then
-        ParseFolder(fmeSyncedVideo.Filename);
+      Begin
+        Inc(FIgnoreListViewSelectItem);
+        Try
+          ParseFolder(fmeSyncedVideo.Filename);
+        Finally
+          Dec(FIgnoreListViewSelectItem);
+        End;
+      End;
     End;
   Finally
     EndFormUpdate;
@@ -524,7 +527,9 @@ End;
 Procedure TfrmSyncedVideoPlayer.mnuOpenClick(Sender: TObject);
 Begin
   If dlgOpen.Execute Then
+  Begin
     OpenVideo(dlgOpen.Files);
+  End;
 End;
 
 Procedure TfrmSyncedVideoPlayer.mnuOpenRecentClick(Sender: TObject);
@@ -559,6 +564,18 @@ Begin
     Else
       fmeSyncedVideo.Layout(2, 2, clsTopToBottomThenRight);
   End;
+End;
+
+Procedure TfrmSyncedVideoPlayer.tmrUpdateTimer(Sender: TObject);
+Begin
+  tmrUpdate.Enabled := False;
+
+  sbMain.Panels[1].Text := 'Start: ' + FormatDateTime('yyyy-mm-dd HH:nn',
+    fmeSyncedVideo.StartDateTime);
+  sbMain.Panels[2].Text := 'Duration: ' + FormatDateTime('HH:nn:ss',
+    fmeSyncedVideo.DurationAsTime);
+  sbMain.Panels[3].Text := 'End: ' + FormatDateTime('yyyy-mm-dd HH:nn',
+    fmeSyncedVideo.EndDateTime);
 End;
 
 Procedure TfrmSyncedVideoPlayer.LoadGlobalSettings(oInifile: TIniFile);
