@@ -1,7 +1,7 @@
 inherited frmSyncedVideoPlayer: TfrmSyncedVideoPlayer
-  Left = 535
+  Left = 333
   Height = 532
-  Top = 141
+  Top = 317
   Width = 751
   AllowDropFiles = True
   Caption = 'Multichannel Video Player'

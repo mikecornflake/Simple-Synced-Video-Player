@@ -583,6 +583,7 @@ Begin
   Inherited;
 
   FMRU.Load(oInifile, 'Files', 'MRU');
+  fmeVideoPlayer.LoadSettings(oIniFile);
 End;
 
 Procedure TfrmSyncedVideoPlayer.SaveGlobalSettings(oInifile: TIniFile);
@@ -590,6 +591,7 @@ Begin
   Inherited;
 
   FMRU.Save(oInifile, 'Files', 'MRU');
+  fmeVideoPlayer.SaveSettings(oIniFile);
 End;
 
 End.
