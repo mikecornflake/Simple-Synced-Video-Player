@@ -373,9 +373,10 @@ Begin
     End
     Else
     Begin
-      fmeVideoPlayer.Clear;
-      fmeSyncedVideo.BeginLoadVideos;
-      fmeSyncedVideo.EndLoadVideos;
+      // TODO Implement clear
+      //fmeVideoPlayer.Clear;
+      //fmeSyncedVideo.BeginLoadVideos;
+      //fmeSyncedVideo.EndLoadVideos;
     end;
   Finally
     Dec(FIgnoreListViewSelectItem);
