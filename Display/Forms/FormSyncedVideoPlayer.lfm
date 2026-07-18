@@ -1,7 +1,7 @@
 inherited frmSyncedVideoPlayer: TfrmSyncedVideoPlayer
-  Left = 571
+  Left = 363
   Height = 532
-  Top = 324
+  Top = 304
   Width = 751
   AllowDropFiles = True
   Caption = 'Multichannel Video Player'
@@ -67,8 +67,8 @@ inherited frmSyncedVideoPlayer: TfrmSyncedVideoPlayer
     TabOrder = 4
     object lvFiles: TListView
       Left = 1
-      Height = 293
-      Top = 192
+      Height = 265
+      Top = 220
       Width = 249
       Align = alClient
       Columns = <      
@@ -97,7 +97,7 @@ inherited frmSyncedVideoPlayer: TfrmSyncedVideoPlayer
     object tvFolders: TShellTreeView
       Left = 1
       Height = 186
-      Top = 1
+      Top = 29
       Width = 249
       Align = alTop
       HideSelection = False
@@ -110,10 +110,96 @@ inherited frmSyncedVideoPlayer: TfrmSyncedVideoPlayer
       Cursor = crVSplit
       Left = 1
       Height = 5
-      Top = 187
+      Top = 215
       Width = 249
       Align = alTop
       ResizeAnchor = akTop
+    end
+    object pnlDrive: TPanel
+      Left = 1
+      Height = 26
+      Top = 3
+      Width = 249
+      Align = alTop
+      AutoSize = True
+      BorderSpacing.Top = 2
+      BevelOuter = bvNone
+      ClientHeight = 26
+      ClientWidth = 249
+      TabOrder = 3
+      object btnRefresh: TBitBtn
+        AnchorSideTop.Control = pnlDrive
+        AnchorSideRight.Control = pnlDrive
+        AnchorSideRight.Side = asrBottom
+        Left = 164
+        Height = 26
+        Hint = 'Refresh selected folder'
+        Top = 0
+        Width = 85
+        Anchors = [akTop, akRight]
+        AutoSize = True
+        Caption = 'Refresh'
+        Glyph.Data = {
+          36040000424D3604000000000000360000002800000010000000100000000100
+          2000000000000004000064000000640000000000000000000000FFFFFF000000
+          000000000000000000000000000000000000000000330000002F000000000000
+          0000000000000000000000000000000000000000000000000000FFFFFF000000
+          000000000000000000000000000000000033008B49FF008A4AF1000000000000
+          0000000000000000000000000000000000000000000000000000FFFFFF000000
+          0000000000000000000000000033008743FFA1E2D5FF239A60FF000000330000
+          0033000000330000003300000022000000000000000000000000FFFFFF000000
+          00000000000000000033008743FF93DCC9FF1ACAADFF00B68EFF009658FF0097
+          5BFF008B4AFF008945FF007E42B9000000330000000000000000FFFFFF000000
+          000000000000008A48FF81DBC2FF14CEA9FF00C499FF57DBC1FF56DCC3FF56DD
+          C4FF56DEC5FF56DCC4FF44C19AFF008B4AFF0000003300000000FFFFFF000000
+          000000000000008A48FF6FD7B8FF12D5A9FF00CD9BFF00CE9DFF00D1A0FF00D2
+          A1FF00D1A0FF00D1A0FF1DD8AEFF2FCCA3FF018A49FF0000001EFFFFFF000000
+          00000000000000000000008744FF5FD1ACFF11DDAAFF00CA90FF008B49FF0087
+          45FF009C5EFF00A568FF00C48AFF04DDA8FF16BA83FF027C44AAFFFFFF000000
+          0033000000330000001A00000000008846FF4ED3A9FF129155FF000000000000
+          002D00000033008B4A89008847F000B578FF00D89FFF008B4BFFFFFFFF00008D
+          4DFF008B4BFF00753F990000002C00000014008C4AA2008D4CFF000000000089
+          4AE5008C4AFF0000003300000000008C4BA8008B4BFF008D4DFFFFFFFF00008B
+          4BFF00D89FFF00B578FF008545E4006A38820000003300000033000000331191
+          54FF53D4AAFF008846FF00000033000000000000000000000000FFFFFF00038D
+          4D951ABA86FF07DBA8FF00BE85FF00A061FF009C5DFF008744FF008A49FF00C9
+          90FF12DCAAFF63D3AFFF008744FF000000330000000000000000FFFFFF000000
+          0000008A49FF35D0AAFF20D7B1FF0DD3A7FF0DD4A7FF0DD4A8FF0DD3A7FF0ED1
+          A4FF00CA9AFF13D3A9FF73D7BBFF008A48FF0000000000000000FFFFFF000000
+          000000000000018B49FF48C29CFF5CDCC6FF5BDEC8FF5ADEC7FF5BDDC6FF5CDB
+          C3FF00C399FF15CCAAFF85DBC3FF008A48FF0000000000000000FFFFFF000000
+          00000000000000000000008A48A8008946FF008844FF008744FF008947FF00B5
+          8EFF1BC8AEFF98DECBFF008742FF000000000000000000000000FFFFFF000000
+          000000000000000000000000000000000000000000000000000000000000239B
+          61FFA1E2D5FF008743FF00000000000000000000000000000000FFFFFF000000
+          000000000000000000000000000000000000000000000000000000000000008C
+          4BED008B49FF0000000000000000000000000000000000000000
+        }
+        TabOrder = 0
+        OnClick = btnRefreshClick
+      end
+      object edtRoot: TDirectoryEdit
+        AnchorSideLeft.Control = pnlDrive
+        AnchorSideTop.Control = pnlDrive
+        AnchorSideRight.Control = btnRefresh
+        Left = 0
+        Height = 23
+        Top = 1
+        Width = 164
+        Directory = 'C:\'
+        DialogTitle = 'Open Folder'
+        DialogOptions = [ofReadOnly, ofEnableSizing, ofViewDetail]
+        ShowHidden = False
+        ButtonWidth = 23
+        DirectInput = False
+        NumGlyphs = 1
+        Anchors = [akTop, akLeft, akRight]
+        BorderSpacing.Top = 1
+        MaxLength = 0
+        TabOrder = 1
+        Text = 'C:\'
+        OnChange = edtRootChange
+      end
     end
   end
   inherited ilImages: TImageList[5]

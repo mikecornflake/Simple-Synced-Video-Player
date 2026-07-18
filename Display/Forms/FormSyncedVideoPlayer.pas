@@ -7,17 +7,20 @@ Interface
 
 Uses
   Classes, SysUtils, FileUtil, Forms, Controls, Graphics, Dialogs, ExtCtrls,
-  Buttons, Menus, ActnList, ComCtrls, ShellCtrls, FrameVideoPlayer,
-  FrameSyncedVideo, FormMain, IniFiles, MRUs;
+  Buttons, Menus, ActnList, ComCtrls, ShellCtrls, StdCtrls, EditBtn,
+  FrameVideoPlayer, FrameSyncedVideo, FormMain, IniFiles, MRUs;
 
 Type
 
   { TfrmSyncedVideoPlayer }
 
   TfrmSyncedVideoPlayer = Class(TFormMain)
+    btnRefresh: TBitBtn;
+    edtRoot: TDirectoryEdit;
     lvFiles: TListView;
     mnuToggleVideo: TMenuItem;
     mnuView: TMenuItem;
+    pnlDrive: TPanel;
     pnlLeft: TPanel;
     Separator1: TMenuItem;
     mnuOpenRecent: TMenuItem;
@@ -30,6 +33,8 @@ Type
     Splitter1: TSplitter;
     Splitter2: TSplitter;
     tmrUpdate: TTimer;
+    Procedure btnRefreshClick(Sender: TObject);
+    Procedure edtRootChange(Sender: TObject);
     Procedure FormActivate(Sender: TObject);
     Procedure FormClose(Sender: TObject; Var CloseAction: TCloseAction);
     Procedure FormCreate(Sender: TObject);
@@ -57,9 +62,8 @@ Type
     Procedure OpenVideo(Const AFiles: TStringArray); Overload;
     Procedure ParseFolder(AFile: String);
   Public
-    // Stored in ini file with exe - what folders to load etc
-    Procedure LoadGlobalSettings(oInifile: TIniFile); Override;
-    Procedure SaveGlobalSettings(oInifile: TIniFile); Override;
+    Procedure LoadLocalSettings(oInifile: TIniFile); Override;
+    Procedure SaveLocalSettings(oInifile: TIniFile); Override;
   End;
 
 Var
@@ -122,7 +126,9 @@ Begin
   sbMain.Panels[1].Text := 'Start:';
   sbMain.Panels[2].Text := 'Duration:';
   sbMain.Panels[3].Text := 'End:';
+
 End;
+
 
 Procedure TfrmSyncedVideoPlayer.FormActivate(Sender: TObject);
 Var
@@ -155,6 +161,26 @@ Begin
 
     FLoaded := True;
   End;
+End;
+
+Procedure TfrmSyncedVideoPlayer.btnRefreshClick(Sender: TObject);
+Begin
+  If DirectoryExists(FFolder) Then
+  Begin
+    tvFolders.Refresh(tvFolders.Selected);
+    //tvFolders.Path := FFolder;
+  End;
+End;
+
+Procedure TfrmSyncedVideoPlayer.edtRootChange(Sender: TObject);
+Begin
+  // We may manually set contents during ParseFolder, in code where
+  // FIgnoreTreeViewChange is incremented
+  If FIgnoreTreeViewChange > 0 Then
+    Exit;
+
+  If DirectoryExists(edtRoot.Directory) Then
+    tvFolders.Root := edtRoot.Directory;
 End;
 
 Procedure TfrmSyncedVideoPlayer.FormClose(Sender: TObject; Var CloseAction: TCloseAction);
@@ -240,7 +266,7 @@ End;
 
 Procedure TfrmSyncedVideoPlayer.ParseFolder(AFile: String);
 Var
-  sFolder, sExt, sSearchMask, sFullName, sDrive: String;
+  sFolder, sExt, sSearchMask, sFullName, sDrive, sTemp: String;
   oSearchRec: TSearchRec;
   oParsedInfo: TInspectionFilenameInfo;
   Files: Array Of TVideoFileInfo;
@@ -377,17 +403,20 @@ Begin
       //fmeVideoPlayer.Clear;
       //fmeSyncedVideo.BeginLoadVideos;
       //fmeSyncedVideo.EndLoadVideos;
-    end;
+    End;
   Finally
     Dec(FIgnoreListViewSelectItem);
   End;
 
   Inc(FIgnoreTreeViewChange);
   Try
-    If tvFolders.Root <> sDrive Then
+    If ExtractFileDrive(tvFolders.Root) <> ExtractFileDrive(sDrive) Then
+    Begin
       tvFolders.Root := sDrive;
+      edtRoot.Text := sDrive;
+    End;
 
-    If Not SameFileName(ExcludeSlash(tvFolders.Path),ExcludeSlash(sFolder)) Then
+    If Not SameFileName(ExcludeSlash(tvFolders.Path), ExcludeSlash(sFolder)) Then
       tvFolders.Path := sFolder;
   Finally
     Dec(FIgnoreTreeViewChange);
@@ -634,20 +663,44 @@ Begin
     fmeSyncedVideo.EndDateTime);
 End;
 
-Procedure TfrmSyncedVideoPlayer.LoadGlobalSettings(oInifile: TIniFile);
+Procedure TfrmSyncedVideoPlayer.LoadLocalSettings(oInifile: TIniFile);
+Var
+  sFolder, sRoot: String;
 Begin
   Inherited;
 
   FMRU.Load(oInifile, 'Files', 'MRU');
   fmeVideoPlayer.LoadSettings(oIniFile);
+
+  Inc(FIgnoreTreeViewChange);
+  Try
+    sRoot := oIniFile.ReadString('Last', 'Root', '-');
+    If (sRoot <> '-') And DirectoryExists(sRoot) Then
+    Begin
+      edtRoot.Directory := sRoot;
+      tvFolders.Root := sRoot;
+    End;
+  Finally
+    Dec(FIgnoreTreeViewChange);
+  End;
+
+  sFolder := oIniFile.ReadString('Last', 'Folder', '-');
+  If (sFolder <> '-') And DirectoryExists(sFolder) Then
+    ParseFolder(sFolder);
 End;
 
-Procedure TfrmSyncedVideoPlayer.SaveGlobalSettings(oInifile: TIniFile);
+Procedure TfrmSyncedVideoPlayer.SaveLocalSettings(oInifile: TIniFile);
 Begin
   Inherited;
 
   FMRU.Save(oInifile, 'Files', 'MRU');
   fmeVideoPlayer.SaveSettings(oIniFile);
+
+  If DirectoryExists(FFolder) Then
+    oIniFile.WriteString('Last', 'Folder', FFolder);
+
+  If DirectoryExists(edtRoot.Directory) Then
+    oIniFile.WriteString('Last', 'Root', edtRoot.Directory);
 End;
 
 End.
