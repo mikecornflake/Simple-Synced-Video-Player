@@ -7,7 +7,7 @@ Interface
 
 Uses
   Classes, SysUtils, FileUtil, Forms, Controls, Graphics, Dialogs, ExtCtrls,
-  Buttons, Menus, ActnList, ComCtrls, ShellCtrls, StdCtrls, EditBtn,
+  Buttons, Menus, ActnList, ComCtrls, ShellCtrls, EditBtn,
   FrameVideoPlayer, FrameSyncedVideo, FormMain, IniFiles, MRUs;
 
 Type
@@ -73,7 +73,7 @@ Implementation
 
 Uses
   FileSupport, VideoEngineFactory, ControlGridLayout, StringSupport,
-  InspectionSupport, DateUtils, ControlsSupport,
+  InspectionSupport, DateUtils, Math,
 
   // Include all required video playback engines below this point
   FrameVideoLibmpv;
@@ -266,7 +266,7 @@ End;
 
 Procedure TfrmIMVideo.ParseFolder(AFile: String);
 Var
-  sFolder, sExt, sSearchMask, sFullName, sDrive, sTemp: String;
+  sFolder, sExt, sSearchMask, sFullName, sDrive: String;
   oSearchRec: TSearchRec;
   oParsedInfo: TInspectionFilenameInfo;
   Files: Array Of TVideoFileInfo;
@@ -446,8 +446,7 @@ Begin
   End;
 End;
 
-Procedure TfrmIMVideo.lvFilesSelectItem(Sender: TObject; Item: TListItem;
-  Selected: Boolean);
+Procedure TfrmIMVideo.lvFilesSelectItem(Sender: TObject; Item: TListItem; Selected: Boolean);
 Var
   arrFiles: TStringArray;
   sFile: String;
@@ -666,6 +665,7 @@ End;
 Procedure TfrmIMVideo.LoadLocalSettings(oInifile: TIniFile);
 Var
   sFolder, sRoot: String;
+  iTemp: Longint;
 Begin
   Inherited;
 
@@ -687,6 +687,13 @@ Begin
   sFolder := oIniFile.ReadString('Last', 'Folder', '-');
   If (sFolder <> '-') And DirectoryExists(sFolder) Then
     ParseFolder(sFolder);
+
+  iTemp := oIniFile.ReadInteger('Last', 'Files Height', -1);
+  tvFolders.Height := EnsureRange(iTemp, 160, pnlLeft.Height - 160);
+  tvFolders.Top := pnlDrive.Height;
+
+  iTemp := oIniFile.ReadInteger('Last', 'Files Width', -1);
+  pnlLeft.Width := EnsureRange(iTemp, 250, frmIMVideo.Width Div 2);
 End;
 
 Procedure TfrmIMVideo.SaveLocalSettings(oInifile: TIniFile);
@@ -701,6 +708,9 @@ Begin
 
   If DirectoryExists(edtRoot.Directory) Then
     oIniFile.WriteString('Last', 'Root', edtRoot.Directory);
+
+  oIniFile.WriteInteger('Last', 'Files Height', lvFiles.Height);
+  oIniFile.WriteInteger('Last', 'Files Width', pnlLeft.Width);
 End;
 
 End.

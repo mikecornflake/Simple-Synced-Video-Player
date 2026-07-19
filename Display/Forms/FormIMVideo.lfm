@@ -55,6 +55,7 @@ inherited frmIMVideo: TfrmIMVideo
     Height = 486
     Top = 0
     Width = 5
+    AutoSnap = False
   end
   object pnlLeft: TPanel[4]
     Left = 0
@@ -64,28 +65,35 @@ inherited frmIMVideo: TfrmIMVideo
     Align = alLeft
     ClientHeight = 486
     ClientWidth = 251
+    Constraints.MinWidth = 160
     TabOrder = 4
     object lvFiles: TListView
       Left = 1
-      Height = 265
-      Top = 220
+      Height = 291
+      Top = 194
       Width = 249
       Align = alClient
+      AutoSort = False
       Columns = <      
         item
+          AutoSize = True
           Caption = 'Time'
+          Width = 42
         end      
         item
+          AutoSize = True
           Caption = 'Date'
-          Width = 70
+          Width = 39
         end      
         item
-          Caption = 'Files'
-          Width = 35
+          AutoSize = True
+          Caption = '#'
+          Width = 22
         end      
         item
+          AutoSize = True
           Caption = 'File'
-          Width = 200
+          Width = 33
         end>
       HideSelection = False
       ReadOnly = True
@@ -96,10 +104,11 @@ inherited frmIMVideo: TfrmIMVideo
     end
     object tvFolders: TShellTreeView
       Left = 1
-      Height = 186
+      Height = 160
       Top = 29
       Width = 249
       Align = alTop
+      Constraints.MinHeight = 160
       HideSelection = False
       Root = 'C:\'
       TabOrder = 1
@@ -110,7 +119,7 @@ inherited frmIMVideo: TfrmIMVideo
       Cursor = crVSplit
       Left = 1
       Height = 5
-      Top = 215
+      Top = 189
       Width = 249
       Align = alTop
       ResizeAnchor = akTop
