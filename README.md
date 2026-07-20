@@ -65,7 +65,7 @@ Online Package Manager (OPM):
 
 #### Video Playback
 
-Video playback is provided by UW_MPVPlayer:
+Video playback mpv wrapper is provided by UW_MPVPlayer:
 
 https://github.com/URUWorks/UW_MPVPlayer
 
